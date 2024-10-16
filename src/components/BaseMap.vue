@@ -5,21 +5,18 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Map, View, Feature } from 'ol';
-import { Tile as TileLayer } from 'ol/layer';
-import { OSM } from 'ol/source';
-import { Vector as VectorLayer } from 'ol/layer';
-import { Vector as VectorSource } from 'ol/source';
-import { Point, LineString } from 'ol/geom';
-import { Icon, Style, Stroke } from 'ol/style';
+<script lang="ts" setup>
+import {onMounted, ref} from 'vue';
+import {Feature, Map, View} from 'ol';
+import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
+import {OSM, Vector as VectorSource} from 'ol/source';
+import {LineString, Point} from 'ol/geom';
+import {Icon, Stroke, Style} from 'ol/style';
 import axios from 'axios';
 import IconStartPin from '../assets/IconStartPin.png';
 import IconEndPin from '../assets/IconEndPin.png';
 import GeoFilterView from "@/views/GeoFilterView.vue";
 import {useToast} from "vue-toastification";
-import {fromLonLat} from "ol/proj";
 import {boundingExtent} from "ol/extent";
 
 const toast = useToast();
@@ -35,7 +32,7 @@ let pointFinalStar = ref<Feature[]>([]);
 let lineLayer = ref<VectorLayer<VectorSource> | null>(null);
 
 
-function handleFilterData(filterData:{person: number | null, startDate:string | null, endDate:string | null}){
+function handleFilterData(filterData: { person: number | null, startDate: string | null, endDate: string | null }) {
   pointFeatures.value = [];
   map.value.removeLayers;
   routeLine.value = [];
@@ -213,6 +210,7 @@ onMounted(() => {
   position: relative;
   z-index: 1;
 }
+
 .filter-overlay {
   position: absolute;
   top: 20px;
