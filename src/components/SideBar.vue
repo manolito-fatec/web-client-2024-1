@@ -4,6 +4,7 @@
     <button class="toggle-btn" @click="$emit('toggle-filters')">
       <IconFilter />
     </button>
+    <button @click="toggleDraw"> <IconAlert /></button>
   </div>
 </template>
 
@@ -11,6 +12,12 @@
 import IconFilter from "@/components/icons/IconFilter.vue";
 import IconLogo from "@/components/icons/IconLogo.vue";
 import IconAlert from "@/components/icons/IconAlert.vue";
+
+
+const emit = defineEmits(['toggleDraw']);
+function toggleDraw() {
+  emit('toggleDraw');
+}
 </script>
 
 <style scoped>

@@ -1,6 +1,7 @@
 <template>
   <div class="map-wrapper">
     <GeoFilterView class="filter-overlay" @saveFilter="handleFilterData"></GeoFilterView>
+    <Sidebar @toggleDraw="toggleDraw"></Sidebar>
     <div id="map" class="map-container"></div>
   </div>
 </template>
@@ -18,6 +19,10 @@ import IconEndPin from '../assets/IconEndPin.png';
 import GeoFilterView from "@/views/GeoFilterView.vue";
 import {useToast} from "vue-toastification";
 import {boundingExtent} from "ol/extent";
+import { Draw } from 'ol/interaction';
+import { Polygon } from 'ol/geom';
+import Sidebar from "@/components/SideBar.vue";
+
 
 const toast = useToast();
 
@@ -166,6 +171,35 @@ const adjustMap = () => {
   }
 };
 
+let drawInteraction = ref<Draw | null>(null);
+
+function toggleDraw() {
+  console.log('asda')
+  drawInteraction.value = !drawInteraction.value;
+  drawPolygon();
+}
+
+const drawPolygon = () => {
+  if (drawInteraction.value) {
+    map.value?.removeInteraction(drawInteraction.value);
+  }
+
+  drawInteraction.value = new Draw({
+    source: new VectorSource(),  // This will hold the polygon features
+    type: 'Polygon',
+  });
+
+  drawInteraction.value.on('drawend', (event) => {
+    const polygon = event.feature.getGeometry() as Polygon;
+    console.log('Polygon Coordinates:', polygon.getCoordinates());
+
+    pointFeatures.value.push(event.feature);
+  });
+
+  map.value?.addInteraction(drawInteraction.value);
+};
+
+
 const createMap = () => {
   map.value = new Map({
     target: 'map',
@@ -177,7 +211,7 @@ const createMap = () => {
     view: new View({
       center: center.value,
       zoom: zoom.value,
-      projection: 'EPSG:4326',
+      projection: projection.value,
     }),
   });
 
@@ -185,6 +219,7 @@ const createMap = () => {
     source: new VectorSource({
       features: pointFeatures.value,
     }),
+
   });
 
   const routeLayer = new VectorLayer({
