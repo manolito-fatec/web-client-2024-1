@@ -2,12 +2,15 @@
   <div class="map-wrapper">
     <GeoFilterView class="filter-overlay" @saveFilter="handleFilterData"></GeoFilterView>
     <div id="map" class="map-container"></div>
+    <div id="popup" class="ol-popup">
+      <div id="popup-content"></div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Map, View, Feature } from 'ol';
+import { Map, View, Feature, Overlay } from 'ol';
 import { Tile as TileLayer } from 'ol/layer';
 import { OSM } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
@@ -20,6 +23,7 @@ import IconEndPin from '../assets/IconEndPin.png';
 import GeoFilterView from "@/views/GeoFilterView.vue";
 import {useToast} from "vue-toastification";
 import {boundingExtent} from "ol/extent";
+import {fetchPersons} from "@/services/apiService.js";
 
 const toast = useToast();
 
@@ -30,8 +34,9 @@ let map = ref<Map | null>(null);
 let pointFeatures = ref<Feature[]>([]);
 let routeLine = ref<Feature[]>([]);
 let pointFinalStar = ref<Feature[]>([]);
-
 let lineLayer = ref<VectorLayer<VectorSource> | null>(null);
+let thePerson:{person: number | null, startDate:string | null, endDate:string | null};
+let PersonOption = ref<{ label: string; value: number }[]>([]);
 
 
 function handleFilterData(filterData:{person: number | null, startDate:string | null, endDate:string | null}){
@@ -48,6 +53,7 @@ function handleFilterData(filterData:{person: number | null, startDate:string | 
     } else {
       let pointList = new ref(points);
       makeGeometryPointFromArray(pointList, filterData.person);
+      thePerson = filterData.person
       lineLayer.value = makeLineFromPoints(pointFeatures);
       console.log(points);
       map.value.addLayer(lineLayer.value);
@@ -82,6 +88,7 @@ function makeGeometryPointFromArray(arrayOfGeometryObjects, nameFilter?) {
   if (nameFilter) {
     const startPoint = new Feature({
       geometry: new Point([arrayOfGeometryObjects.value[0].longitude, arrayOfGeometryObjects.value[0].latitude]),
+      name: 'Início do percurso' // Adiciona o title nativo
     });
 
     startPoint.setStyle(new Style({
@@ -94,6 +101,8 @@ function makeGeometryPointFromArray(arrayOfGeometryObjects, nameFilter?) {
 
     const endPoint = new Feature({
       geometry: new Point([arrayOfGeometryObjects.value[arrayOfGeometryObjects.value.length - 1].longitude, arrayOfGeometryObjects.value[arrayOfGeometryObjects.value.length - 1].latitude]),
+      name: 'Fim do percurso' // Adiciona o title nativo
+
     });
 
     endPoint.setStyle(new Style({
@@ -209,11 +218,75 @@ const createMap = () => {
   map.value.addLayer(vectorLayer);
   map.value.addLayer(routeLayer);
 }
+
+async function getPersonName(personID: number): Promise<{ label: string; value: number } | undefined> {
+  let personListFromDb = await fetchPersons();
+  
+  // Atribui a lista de opções com a tipagem correta
+  PersonOption.value = personListFromDb.map(person => ({
+    label: person.fullName.toUpperCase(),
+    value: person.idPerson
+
+  }));
+  console.log(PersonOption.value)
+
+  // Retorna a pessoa correspondente ao ID
+  return PersonOption.value.find(person => person.value === personID);
+}
+
 onMounted(() => {
 
   createMap()
+  
+  const popupElement = document.getElementById('popup') as HTMLElement;
+  const popupContent = document.getElementById('popup-content') as HTMLElement;
+  const popupOverlay = new Overlay({
+    element: popupElement,
+    autoPan: true,
+    autoPanAnimation: {
+      duration: 250,
+    },
+  });
+  map.value?.addOverlay(popupOverlay);
+  
+  // Adiciona o evento de clique ao mapa
+  map.value?.on('click', (e) => {
+  let clickedFeature = false;
 
+  map.value?.forEachFeatureAtPixel(e.pixel, (feature) => {
+    const featureName = feature.get('name');
+
+    if (featureName) {
+      clickedFeature = true;
+      const coordinates = feature.getGeometry().getCoordinates();
+      const offsetCoordinates = [coordinates[0], coordinates[1]];
+      popupOverlay.setPosition(offsetCoordinates);
+
+      // Obtenha o nome da pessoa usando a Promise corretamente
+      getPersonName(thePerson.person)
+        .then(personName => {
+          console.log(personName?.label)
+          // Verifique se a pessoa foi encontrada e atualize o conteúdo do popup
+          popupContent.innerHTML = `<p>${personName?.label}</p>`;
+          popupElement.style.display = 'block';
+        })
+        .catch(error => {
+          console.error(error);
+          popupContent.innerHTML = '<p>Erro ao buscar o nome</p>';
+          popupElement.style.display = 'block';
+        });
+    }
+  });
+
+  if (!clickedFeature) {
+    popupOverlay.setPosition(undefined);
+    popupElement.style.display = 'none';
+  }
 });
+});
+
+
+
 </script>
 
 <style scoped>
@@ -232,4 +305,23 @@ onMounted(() => {
   padding: 10px;
   border-radius: 8px;
 }
+.ol-popup {
+  position: absolute;
+  background-color: rgb(80, 80, 80);
+  padding: 10px;
+  border: 1px solid black;
+  border-radius: 8px;
+  min-width: 150px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  display: none;
+  pointer-events: none; /* Desativa interações quando o popup está escondido */
+}
+
+.ol-popup.active {
+  display: block;
+  pointer-events: auto; /* Ativa interações quando o popup está visível */
+}
+
+
+
 </style>
