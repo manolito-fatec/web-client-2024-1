@@ -1,9 +1,7 @@
 <template>
   <button class="start-button">
-    <div class="button-content">
-      <IconCorrect class="icon"/>
-      <span class="button-text">Iniciar</span>
-    </div>
+    <IconCorrect class="icon"/>
+    <span class="button-text">Iniciar</span>
   </button>
 </template>
 
@@ -13,10 +11,8 @@ import IconCorrect from "@/components/icons/IconCorrect.vue";
 
 <style scoped>
 .start-button {
-  height: 40px;
   display: flex;
   align-items: center;
-  justify-content: center;
   background-color: #929292;
   color: #ffffff;
   border: none;
@@ -27,20 +23,15 @@ import IconCorrect from "@/components/icons/IconCorrect.vue";
   transition: background-color 0.3s ease;
 }
 
-.button-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .start-button .icon {
+  margin-right: 8px;
   width: 24px;
   height: 24px;
-  margin-right: 3px;
 }
 
 .start-button .button-text {
-  font-size: 15px;
+  font-size: 16px;
   color: #262626;
 }
+
 </style>

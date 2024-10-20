@@ -1,22 +1,22 @@
 <template>
-  <div ref="filterItem" class="filter-item">
+  <div class="filter-item" ref="filterItem">
     <label :for="id" class="filter-label">{{ label }}</label>
     <input
-        ref="inputField"
-        v-model="searchTerm"
-        class="filter-input"
-        placeholder="Digite para buscar..."
         type="text"
+        v-model="searchTerm"
+        ref="inputField"
         @focus="handleFocus"
         @input="filterOptions"
         @keydown.enter="selectClosestOption"
+        placeholder="Digite para buscar..."
+        class="filter-input"
     />
     <ul v-if="filteredOptions.length > 0" class="suggestions">
       <li
           v-for="option in filteredOptions"
           :key="option.value"
-          class="suggestion-item"
           @click="selectOption(option)"
+          class="suggestion-item"
       >
         {{ option.label }}
       </li>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {ref, watch, onMounted, onBeforeUnmount} from 'vue';
 
 const props = defineProps({
   id: String,
@@ -105,54 +105,41 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .filter-item {
-  margin-bottom: 16px;
-  position: relative;
+  margin-bottom: 8px;
 }
 
 .filter-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: #ffffff;
-  font-weight: 500;
-  font-size: 14px;
 }
 
 .filter-input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #555555;
-  border-radius: 6px;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
   background-color: #444444;
-  font-size: 13px;
   color: #fff;
-  outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
-}
-
-.filter-input:focus {
-  border: 1px solid #888888;
-  box-shadow: 0 0 5px rgba(136, 136, 136, 0.5);
 }
 
 .suggestions {
   list-style: none;
   padding: 0;
-  margin: 4px 0 0;
-  border: 1px solid #888888;
+  margin: 4px 0 0 0;
+  border: 1px solid #ccc;
   max-height: 150px;
   overflow-y: auto;
   background: #444444;
   position: absolute;
-  width: 100%;
+  width: 90%;
   z-index: 1000;
-  border-radius: 4px;
 }
 
 .suggestion-item {
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
   color: #ffffff;
-  transition: background 0.2s;
 }
 
 .suggestion-item:hover {
