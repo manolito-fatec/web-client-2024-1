@@ -17,6 +17,18 @@ export const fetchPersons = async () => {
     }
 };
 
+export const fetchPersonById = async (personId) => {
+    try {
+        const response = await axios.get(BASE_URL_ENDPOINT + '/' + personId).then((pessoa) =>{
+            return pessoa.data.fullName;
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao buscar pessoa:", error);
+        throw error;
+    }
+};
+
 export const fetchDevices = async () => {
     try {
         const response = await axios.get(BASE_URL_ENDPOINT);

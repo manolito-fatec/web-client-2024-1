@@ -23,7 +23,7 @@ import IconEndPin from '../assets/IconEndPin.png';
 import GeoFilterView from "@/views/GeoFilterView.vue";
 import {useToast} from "vue-toastification";
 import {boundingExtent} from "ol/extent";
-import {fetchPersons} from "@/services/apiService.js";
+import {fetchPersonById, fetchPersons} from "@/services/apiService.js";
 
 const toast = useToast();
 
@@ -53,9 +53,7 @@ function handleFilterData(filterData:{person: number | null, startDate:string | 
     } else {
       let pointList = new ref(points);
       makeGeometryPointFromArray(pointList, filterData.person);
-      thePerson = filterData.person
       lineLayer.value = makeLineFromPoints(pointFeatures);
-      console.log(points);
       map.value.addLayer(lineLayer.value);
       adjustMap();
     }
@@ -98,6 +96,9 @@ function makeGeometryPointFromArray(arrayOfGeometryObjects, nameFilter?) {
         anchor: [0.5, 1],
       }),
     }));
+    startPoint.setProperties({
+      personName: nameFilter
+    })
 
     const endPoint = new Feature({
       geometry: new Point([arrayOfGeometryObjects.value[arrayOfGeometryObjects.value.length - 1].longitude, arrayOfGeometryObjects.value[arrayOfGeometryObjects.value.length - 1].latitude]),
@@ -112,6 +113,9 @@ function makeGeometryPointFromArray(arrayOfGeometryObjects, nameFilter?) {
         anchor: [0.5, 1],
       }),
     }));
+    endPoint.setProperties({
+      personName: nameFilter
+    })
 
     pointFinalStar.value.push(startPoint);
     pointFinalStar.value.push(endPoint);
@@ -221,17 +225,16 @@ const createMap = () => {
 
 async function getPersonName(personID: number): Promise<{ label: string; value: number } | undefined> {
   let personListFromDb = await fetchPersons();
+
   
   // Atribui a lista de opções com a tipagem correta
   PersonOption.value = personListFromDb.map(person => ({
     label: person.fullName.toUpperCase(),
     value: person.idPerson
-
   }));
-  console.log(PersonOption.value)
 
   // Retorna a pessoa correspondente ao ID
-  return PersonOption.value.find(person => person.value === personID);
+  return PersonOption.value.find(person => person.value.idPerson === personID);
 }
 
 onMounted(() => {
@@ -263,9 +266,8 @@ onMounted(() => {
       popupOverlay.setPosition(offsetCoordinates);
 
       // Obtenha o nome da pessoa usando a Promise corretamente
-      getPersonName(thePerson.person)
+      getPersonName(thePerson)
         .then(personName => {
-          console.log(personName?.label)
           // Verifique se a pessoa foi encontrada e atualize o conteúdo do popup
           popupContent.innerHTML = `<p>${personName?.label}</p>`;
           popupElement.style.display = 'block';
